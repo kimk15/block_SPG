@@ -29,7 +29,7 @@ def unfold(tensor, mode=0):
 Generates sketching indices
 """
 def generate_sketch_indices(B, total_col):
-	return np.random.choice(range(total_col), size=B, replace=False, p=None)
+	return np.random.choice(total_col, size=B, replace=False, p=None)
 
 """
 Update a single factor matrix via gradient update
@@ -39,6 +39,8 @@ def update_factor_bras(X, A, idx, n, rank, alpha):
 	H_n = (tl_alg.khatri_rao(A, skip_matrix=n))[idx, :]
 	A[n] -= alpha/rank * (A[n] @ H_n.T @ H_n - X_n.T @ H_n)
 
+	# Apply proximal regularization constraint (A > 0)
+	A[n] = np.clip(A[n], a_min=0, a_max=None)
 
 """
 Update a single factor matrix via gradient update
@@ -56,6 +58,9 @@ def update_factor_ada(X, A, G, idx, n, rank, eta, b, eps):
 	# Update factor matrices
 	A[n] -= lr*grad
 
+	# Apply proximal regularization constraint (A > 0)
+	A[n] = np.clip(A[n], a_min=0, a_max=None)
+
 	# Accumulate gradient information.
 	G[n] += grad**(2)
 
@@ -69,22 +74,20 @@ def compute_learning_rate(G_n, b, eta, eps):
 """
 Computes Normalized MSE between the factor matrices:
 """
-def MSE(A_true, A):
-	F = len(A_true)
+def MSE(F, F_norm, A):
 	mse = 0
-	for i in range(len(A_true)):
-		A_true_norm = A_true[i] / norm(A_true[i])
+	for i in range(len(A)):
+		A_true_norm = F[i] / F_norm[i]
 		A_norm = A[i] / norm(A[i])
 		mse += norm(A_true_norm - A_norm)**2
-	return mse/F
+	return mse/len(A)
 
 """
 Computes residual error
 """
-def residual_error(X, A):
-	dim_1, dim_2, dim_3 = X.shape
+def residual_error(X, norm_x, A):
 	X_bar = tl_kruskal.kruskal_to_tensor(A)
-	return norm(X-X_bar)/(dim_1*dim_2*dim_3)
+	return norm(X-X_bar)/norm_x
 
 """
 Computes norm of a tensor
