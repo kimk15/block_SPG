@@ -32,8 +32,6 @@ def bras_CPD(F, X, rank, B, alpha, beta, num_iterations=100):
 
 	# Run bras_CPD
 	for r in range(num_iterations):
-		if (r+1)%1000 == 0:
-			print("Iteration:", r)
 		# Randomly select mode n to update.
 		n = sample(3)
 
@@ -75,12 +73,11 @@ def ada_CPD(F, X, rank, B, eta, b, eps, num_iterations):
 	res_error.append(residual_error(X, norm_x, A))
 	mse.append(MSE(F, F_norm, A))
 	# cost.append(residual_error(X, A))
-	A[0] = np.clip(A[0], a_min=0,a_max=0.1)
 
 	# Run bras_CPD
 	for r in range(num_iterations):
-		if (r+1)%1000 == 0:
-			print("Iteration:", r)
+		if (r+1) % 5000 == 0:
+			print("iteration:", r)
 		# Randomly select mode n to update.
 		n = sample(3)
 
@@ -94,4 +91,4 @@ def ada_CPD(F, X, rank, B, eta, b, eps, num_iterations):
 		res_error.append(residual_error(X, norm_x, A))
 		mse.append(MSE(F, F_norm, A))
 
-	return res_error, mse
+	return res_error, mse, A
