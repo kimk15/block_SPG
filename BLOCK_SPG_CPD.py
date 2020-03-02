@@ -6,6 +6,7 @@ from helper import update_factor_ada
 from helper import residual_error
 from helper import norm
 from helper import MSE
+from helper import sketched_residual_error
 import numpy as np
 
 """
@@ -32,6 +33,8 @@ def bras_CPD(F, X, rank, B, alpha, beta, num_iterations=100):
 
 	# Run bras_CPD
 	for r in range(num_iterations):
+		if (r+1) % 5000 == 0:
+			print("iteration:", r)
 		# Randomly select mode n to update.
 		n = sample(3)
 
@@ -45,7 +48,7 @@ def bras_CPD(F, X, rank, B, alpha, beta, num_iterations=100):
 		alpha /= (r+1)**beta
 
 		# Append error
-		res_error.append(residual_error(X, norm_x, A))
+		res_error.append(sketched_residual_error(X, norm_x, idx, A, n))
 		mse.append(MSE(F, F_norm, A))
 
 

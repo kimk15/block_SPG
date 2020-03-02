@@ -89,6 +89,15 @@ def residual_error(X, norm_x, A):
 	X_bar = tl_kruskal.kruskal_to_tensor(A)
 	return norm(X-X_bar)/norm_x
 
+
+"""
+Computes sketched residual error
+"""
+def sketched_residual_error(X, norm_x,  idx, A, m):
+	X_bar = tl_kruskal.kruskal_to_tensor(A)
+	return norm(unfold(X, mode=m)[:,idx]-unfold(X_bar, mode=m)[:,idx])/norm_x
+
+
 """
 Computes norm of a tensor
 """
