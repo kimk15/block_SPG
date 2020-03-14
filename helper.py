@@ -34,10 +34,9 @@ def generate_sketch_indices(B, total_col):
 """
 Update a single factor matrix via gradient update
 """
-def update_factor_bras(X, A, idx, n, rank, alpha):
-	X_n = ((unfold(X, mode=n)).T)[idx, :]
+def update_factor_bras(X_unfold, A, idx, n, rank, alpha):
 	H_n = (tl_alg.khatri_rao(A, skip_matrix=n))[idx, :]
-	A[n] -= alpha/rank * (A[n] @ H_n.T @ H_n - X_n.T @ H_n)
+	A[n] -= alpha/rank * (A[n] @ H_n.T @ H_n - X_unfold[n][:, idx] @ H_n)
 
 	# Apply proximal regularization constraint (A > 0)
 	A[n] = np.clip(A[n], a_min=0, a_max=None)
@@ -45,18 +44,14 @@ def update_factor_bras(X, A, idx, n, rank, alpha):
 """
 Update a single factor matrix via gradient update
 """
-def update_factor_ada(X, A, G, idx, n, rank, eta, b, eps):
-	# Compute Gradient
-	X_n = ((tl_base.unfold(X, n)).T)[idx, :]
-	H_n = (tl_alg.khatri_rao(A, skip_matrix=n))[idx, :]
-	grad = 1/rank*(A[n] @ H_n.T @ H_n - X_n.T @ H_n)
-
+def update_factor_ada(X_unfold, A, G, idx, n, rank, eta, b, eps):
 	# Compute Learning Rate
 	lr = compute_learning_rate(G[n], b, eta, eps)
 	# lr = 0.1
 
-	# Update factor matrices
-	A[n] -= lr*grad
+	# Compute Grad
+	H_n = (tl_alg.khatri_rao(A, skip_matrix=n))[idx, :]
+	A[n] -= lr/rank * (A[n] @ H_n.T @ H_n - X_unfold[n][:, idx] @ H_n)
 
 	# Apply proximal regularization constraint (A > 0)
 	A[n] = np.clip(A[n], a_min=0, a_max=None)
@@ -85,9 +80,9 @@ def MSE(F, F_norm, A):
 """
 Computes residual error
 """
-def residual_error(X, norm_x, A):
-	X_bar = tl_kruskal.kruskal_to_tensor(A)
-	return norm(X-X_bar)/norm_x
+def residual_error(X0, norm_x, A, B, C):
+	X_bar = A @ (tl_alg.khatri_rao([A, B, C], skip_matrix=0).T)
+	return norm(X0-X_bar)/norm_x
 
 
 """
