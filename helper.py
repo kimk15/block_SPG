@@ -51,7 +51,8 @@ def update_factor_ada(X_unfold, A, G, idx, n, rank, eta, b, eps):
 
 	# Compute Grad
 	H_n = (tl_alg.khatri_rao(A, skip_matrix=n))[idx, :]
-	A[n] -= lr/rank * (A[n] @ H_n.T @ H_n - X_unfold[n][:, idx] @ H_n)
+	grad = 1/rank * (A[n] @ H_n.T @ H_n - X_unfold[n][:, idx] @ H_n)
+	A[n] -= lr*grad
 
 	# Apply proximal regularization constraint (A > 0)
 	A[n] = np.clip(A[n], a_min=0, a_max=None)
