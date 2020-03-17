@@ -15,10 +15,11 @@ import numpy as np
 Computes brasCPD for 3 dimensional tensors.
 Returns A,B,C
 """
-def bras_CPD(F, X, rank, B, alpha, beta, num_iterations=100):
+def bras_CPD(F, X, rank, B, alpha, beta, num_iterations=100, max_time=None):
 	# bookkeeping
-	time = 0
+	total_time = 0
 	res_error = []
+	time = []
 
 	# Cache norm
 	start = timer()
@@ -35,42 +36,67 @@ def bras_CPD(F, X, rank, B, alpha, beta, num_iterations=100):
 
 	# Finish timing initialization step
 	end = timer()
-	time += end - start
+	total_time += end - start
 
 	# Append initialization residual error
 	res_error.append(residual_error(X_unfold[0], norm_x, A[0], A[1], A[2]))
+	time.append(total_time)
 
 	# Run bras_CPD
-	for r in range(num_iterations):
-		if (r+1) % 5000 == 0:
-			print("iteration:", r)
+	if max_time == None:
+		for r in range(num_iterations):
+			if (r+1) % 5000 == 0:
+				print("iteration:", r)
 
-		# Time start step
-		start = timer()
-		# Randomly select mode n time update.
-		n = sample(3)
-		# Generate sketching indices
-		idx = generate_sketch_indices(B, total_col[n])
-		# Update Factor matrix
-		update_factor_bras(X_unfold, A, idx, n, rank, alpha)
-		# Update learning rate
-		alpha /= (r+1)**beta
-		# Time iteration step
-		end = timer()
-		time += end - start
-		# Append error
-		res_error.append(residual_error(X_unfold[0], norm_x, A[0], A[1], A[2]))
+			# Time start step
+			start = timer()
+			# Randomly select mode n time update.
+			n = sample(3)
+			# Generate sketching indices
+			idx = generate_sketch_indices(B, total_col[n])
+			# Update Factor matrix
+			update_factor_bras(X_unfold, A, idx, n, rank, alpha)
+			# Update learning rate
+			alpha /= (r+1)**beta
+			# Time iteration step
+			end = timer()
+			total_time += end - start
+			# Append error
+			res_error.append(residual_error(X_unfold[0], norm_x, A[0], A[1], A[2]))
+	else:
+		r = 1
+		while total_time < max_time:
+			# Time start step
+			start = timer()
+			# Randomly select mode n time update.
+			n = sample(3)
+			# Generate sketching indices
+			idx = generate_sketch_indices(B, total_col[n])
+			# Update Factor matrix
+			update_factor_bras(X_unfold, A, idx, n, rank, alpha)
+			# Update learning rate
+			alpha /= (r+1)**beta
+			r += 1
+			# Time iteration step
+			end = timer()
+			total_time += end - start
+			# Append error
+			res_error.append(residual_error(X_unfold[0], norm_x, A[0], A[1], A[2]))
+			time.append(total_time)
 
-	return time, res_error
+
+
+	return total_time, res_error, time
 
 """
 Computes AdaCPD for 3 dimensional tensors.
 Returns A,B,C
 """
-def ada_CPD(F, X, rank, B, eta, b, eps, num_iterations):
+def ada_CPD(F, X, rank, B, eta, b, eps, num_iterations=100, max_time=None):
 	# bookkeeping
-	time = 0
+	total_time = 0
 	res_error = []
+	time = []
 
 	# Cache norm
 	start = timer()
@@ -88,29 +114,45 @@ def ada_CPD(F, X, rank, B, eta, b, eps, num_iterations):
 
 	# Finish timing initialization step
 	end = timer()
-	time += end - start
+	total_time += end - start
 
 	# Append initialization residual error
 	res_error.append(residual_error(X_unfold[0], norm_x, A[0], A[1], A[2]))
+	time.append(total_time)
+	if max_time == None:
+		# Run ada_CPD
+		for r in range(num_iterations):
+			if (r+1) % 5000 == 0:
+				print("iteration:", r)
 
-	# Run bras_CPD
-	for r in range(num_iterations):
-		if (r+1) % 5000 == 0:
-			print("iteration:", r)
+			# Time start step
+			start = timer()
+			# Randomly select mode n to update.
+			n = sample(3)
+			# Generate sketching indices
+			idx = generate_sketch_indices(B, total_col[n])
+			# Update factor matrix
+			update_factor_ada(X_unfold, A, G, idx, n, rank, eta, b, eps)
+			# Time iteration step
+			end = timer()
+			total_time += end - start
+			# Append error
+			res_error.append(residual_error(X_unfold[0], norm_x, A[0], A[1], A[2]))
+	else:
+		while total_time < max_time:
+			# Time start step
+			start = timer()
+			# Randomly select mode n to update.
+			n = sample(3)
+			# Generate sketching indices
+			idx = generate_sketch_indices(B, total_col[n])
+			# Update factor matrix
+			update_factor_ada(X_unfold, A, G, idx, n, rank, eta, b, eps)
+			# Time iteration step
+			end = timer()
+			total_time += end - start
 
-		# Time start step
-		start = timer()
-
-		# Randomly select mode n to update.
-		n = sample(3)
-		# Generate sketching indices
-		idx = generate_sketch_indices(B, total_col[n])
-		# Update factor matrix
-		update_factor_ada(X_unfold, A, G, idx, n, rank, eta, b, eps)
-		# Time iteration step
-		end = timer()
-		time += end - start
-		# Append error
-		res_error.append(residual_error(X_unfold[0], norm_x, A[0], A[1], A[2]))
-
-	return time, res_error
+			# Append error
+			res_error.append(residual_error(X_unfold[0], norm_x, A[0], A[1], A[2]))
+			time.append(total_time)
+	return total_time, res_error, time
