@@ -1,3 +1,4 @@
+import pathlib
 import matplotlib.pyplot as plt
 import tensorly.kruskal_tensor as tl_kruskal
 import tensorly.random as tl_rand
@@ -27,6 +28,7 @@ for i in range(10):
     beta = 10**-6
     num_iterations = 0
     max_time = 600
+    rank = 5
 
     # Run bras_cpd update
     alpha = 0.1

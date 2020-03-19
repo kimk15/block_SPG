@@ -30,6 +30,7 @@ for i in range(10):
     eps = 0
     num_iterations = 0
     max_time = 600
+    rank = 5
 
     # Run ada_cpd update
     total_time, res_error, time = ada_CPD(F, X, rank, B, eta, b, eps, num_iterations, max_time)
