@@ -15,8 +15,6 @@ for i in range(10):
 	F = tl_rand.random_kruskal((300,300,300), rank, full=False, random_state=np.random.RandomState(seed=i))
 	X = tl_kruskal.kruskal_to_tensor(F)
 
-	# Ill conditioned matrix
-
 	# Hetero noise
 
 	# Homo noise
